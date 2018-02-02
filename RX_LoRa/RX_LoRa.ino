@@ -1,5 +1,7 @@
 #include "SX1278.h"
-#include <SPI.h>
+//#include <SPI.h>
+//working as gateway
+
 
 #define LORA_MODE  4
 #define LORA_CHANNEL  CH_6_BW_125
@@ -8,6 +10,7 @@
 #define LORA_LED  2
 
 int e;
+
 char my_packet[100];
 
 void setup()
@@ -86,7 +89,7 @@ void validatePacketsReceive(){
     
     if(sx1278._packetNumber!=255){
        e=sx1278._packetNumber-last_packetNumber;
-       
+       Serial.println("testeeeeeeee");
        if(e>1){
           packetLost=packetLost+e;
        }
@@ -99,7 +102,7 @@ void validatePacketsReceive(){
         Serial.print(voltas);
     }
     
-    if(voltas == 4){
+    if(sx1278._packetNumber == 255 ){
       packetLoss=(packetLost/totalPackets);
       Serial.println("--------------------------------------------------------------------------------------");
       Serial.println("Total Packets received in this round: ");
@@ -121,38 +124,61 @@ void validatePacketsReceive(){
   
 }
 
+uint8_t sendAPackettombox(){
+  char test []="123";
+  e = sx1278.sendPacketTimeout(LORA_ADDRESS, test);
+    if(e==0){
+      Serial.println("packet sent");
+      return 1;
+    }
+    else{
+
+      return 0;
+    }
+  
+}
+
 void loop(void)
 {
   // Receive message for 10 seconds
-  e = sx1278.receivePacketTimeout(10000);
-  if (e == 0) {
+ // e = sx1278.receivePacketTimeout(10000);
+  int t;
+  t=sendAPackettombox();
+  if (t == 1) {
     digitalWrite(LORA_LED, HIGH);
     delay(500);
     digitalWrite(LORA_LED, LOW);
-      
+  }
+  delay(4000);
+  delay(4000);
+  delay(4000);
+  delay(4000);
+  delay(4000);
+  delay(4000);
+
     //Serial.println(F("Package received!"));
 
-    for (unsigned int i = 0; i < sx1278.packet_received.length; i++) {
-      my_packet[i] = (char)sx1278.packet_received.data[i];
-    }
-    
-//    Serial.print(F("Message: Source | Packet Number ! Packet Lenght | Payload "));
-    Serial.print(F("Source | Packet Number ! Packet Lenght | Payload -> "));
-    Serial.print(sx1278.packet_received.src);
-    Serial.print(" | ");
-    Serial.print(sx1278.packet_received.packnum);
-    Serial.print(" | ");
-    Serial.print(sx1278.packet_received.length);
-    Serial.println(" ");
+//    for (unsigned int i = 0; i < sx1278.packet_received.length; i++) {
+//      my_packet[i] = (char)sx1278.packet_received.data[i];
+//    }
+//    
+////    Serial.print(F("Message: Source | Packet Number ! Packet Lenght | Payload "));
+//    Serial.print(F("Source | Packet Number ! Packet Lenght | Payload -> "));
+//    Serial.print(sx1278.packet_received.src);
 //    Serial.print(" | ");
-//    Serial.println(my_packet);
-    sx1278.getSNR();
-    sx1278.getRSSI();
-    
-    validatePacketsReceive();
-    
-  } 
-  else {
-    Serial.println(F("Did not receive a message in last 10 seconds\n"));
-  }
+//    Serial.print(sx1278.packet_received.packnum);
+//    Serial.print(" | ");
+//    Serial.print(sx1278.packet_received.length);
+//    Serial.println(" ");
+////    Serial.print(" | ");
+////    Serial.println(my_packet);
+//    sx1278.getSNR();
+//    sx1278.getRSSI();
+//    
+//    validatePacketsReceive();
+//    
+//  } 
+//  else {
+//    Serial.println(F("Did not receive a message in last 10 seconds\n"));
+//  }
 }

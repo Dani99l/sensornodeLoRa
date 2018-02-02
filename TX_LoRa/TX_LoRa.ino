@@ -1,120 +1,134 @@
+
 #include "SX1278.h"
 #include <SPI.h>
 
 #define LORA_MODE  4
 #define LORA_CHANNEL  CH_6_BW_125
-#define LORA_ADDRESS  2
+#define LORA_ADDRESS  4
 
 #define LORA_SEND_TO_ADDRESS  4
 
 #define LORA_LED  2
+#define UART2_TX 1
+#define UART2_RX 3
+
+#define UART0 0
 //COM8 
 int e;
 
 char message1 [] = "Packet 1, random messages to test";
 char message2 [] = "Packet 2, broadcast test";
-
+char my_packet [] = "\0";
 void setup()
 {
   pinMode(LORA_LED, OUTPUT);
 
   // Open serial communications and wait for port to open:
-  Serial.begin(115200);
+//  Serial.begin(115200); 
+   Serial.begin(9600);  //to test with mbox
+  
 
   // Print a start message
-  Serial.println(F("sx1278 module and Arduino: send two packets (One to an addrees and another one in broadcast)"));
+  //Serial.println(F("sx1278 module and Arduino: send two packets (One to an addrees and another one in broadcast)"));
 
   // Power ON the module
   if (sx1278.ON() == 0) {
-    Serial.println(F("Setting power ON: SUCCESS "));
+ //   Serial.println(F("Setting power ON: SUCCESS "));
   } else {
-    Serial.println(F("Setting power ON: ERROR "));
+  //  Serial.println(F("Setting power ON: ERROR "));
   }
 
   // Set transmission mode and print the result
   if (sx1278.setMode(LORA_MODE) == 0) {
-    Serial.println(F("Setting Mode: SUCCESS "));
+   // Serial.println(F("Setting Mode: SUCCESS "));
   } else {
-    Serial.println(F("Setting Mode: ERROR "));
+//    Serial.println(F("Setting Mode: ERROR "));
   }
 
   // Set header
   if (sx1278.setHeaderON() == 0) {
-    Serial.println(F("Setting Header ON: SUCCESS "));
+  //  Serial.println(F("Setting Header ON: SUCCESS "));
   } else {
-    Serial.println(F("Setting Header ON: ERROR "));
+  //  Serial.println(F("Setting Header ON: ERROR "));
   }
 
   // Select frequency channel
   if (sx1278.setChannel(LORA_CHANNEL) == 0) {
-    Serial.println(F("Setting Channel: SUCCESS "));
+    //Serial.println(F("Setting Channel: SUCCESS "));
   } else {
-    Serial.println(F("Setting Channel: ERROR "));
+    //Serial.println(F("Setting Channel: ERROR "));
   }
 
   // Set CRC
   if (sx1278.setCRC_ON() == 0) {
-    Serial.println(F("Setting CRC ON: SUCCESS "));
+    //Serial.println(F("Setting CRC ON: SUCCESS "));
   } else {
-    Serial.println(F("Setting CRC ON: ERROR "));
+    //Serial.println(F("Setting CRC ON: ERROR "));
   }
 
   // Select output power (Max, High, Intermediate or Low)
   if (sx1278.setPower('M') == 0) {
-    Serial.println(F("Setting Power: SUCCESS "));
+    //Serial.println(F("Setting Power: SUCCESS "));
   } else {
-    Serial.println(F("Setting Power: ERROR "));
+    //Serial.println(F("Setting Power: ERROR "));
   }
 
   // Set the node address and print the result
   if (sx1278.setNodeAddress(LORA_ADDRESS) == 0) {
-    Serial.println(F("Setting node address: SUCCESS "));
+    //Serial.println(F("Setting node address: SUCCESS "));
   } else {
-    Serial.println(F("Setting node address: ERROR "));
+   // Serial.println(F("Setting node address: ERROR "));
   }
 
   // Print a success message
-  Serial.println(F("sx1278 configured finished"));
-  Serial.println();
+ // Serial.println(F("sx1278 configured finished"));
+ // Serial.println();
 }
 
-void updatePacketToSend(){
-    // input a packet to send
-    //write it to serial
-    Serial.println("Insert payload packet to send: ");
-    
-  
-}
 
 void loop(void)
 {
   // Send message1 and print the result
-  
-  while(sx1278.cadDetected());      //check if others are transmiting and waits to not detect any 
-  e = sx1278.sendPacketTimeout(LORA_SEND_TO_ADDRESS, message1);
-  Serial.print(F("Packet sent, state "));
-  Serial.println(e, DEC);
-
-  if (e == 0) {
+   int t;
+   t=sx1278.receivePacketTimeout(10000);
+    if(t==1){
       digitalWrite(LORA_LED, HIGH);
       delay(500);
       digitalWrite(LORA_LED, LOW);
-  }
-
-  delay(4000);  
-
-  // Send message2 broadcast and print the result
-  while(sx1278.cadDetected());      //check if others are transmiting and waits to not detect any 
-  e = sx1278.sendPacketTimeout(0, message2);
+      for (unsigned int i = 0; i < sx1278.packet_received.length; i++) {
+          my_packet[i] = (char)sx1278.packet_received.data[i];
+          }
+       Serial.write(my_packet);
+   }
+   delay(500);
+   //will wait for a response to send to gateway
+   
   
-  Serial.print(F("Packet sent, state "));
-  Serial.println(e, DEC);
-
-  if (e == 0) {
-      digitalWrite(LORA_LED, HIGH);
-      delay(500);
-      digitalWrite(LORA_LED, LOW);
-  }
+//  while(sx1278.cadDetected());      //check if others are transmiting and waits to not detect any 
+//    e = sx1278.sendPacketTimeout(LORA_SEND_TO_ADDRESS, message1);
+//    Serial.print(F("Packet sent, state "));
+//    Serial.println(e, DEC);
+//
+//  if (e == 0) {
+//      digitalWrite(LORA_LED, HIGH);
+//      delay(500);
+//      digitalWrite(LORA_LED, LOW);
+//  }
+//
+//  delay(4000);  
+//
+//  // Send message2 broadcast and print the result
+//  while(sx1278.cadDetected());      //check if others are transmiting and waits to not detect any 
+//  e = sx1278.sendPacketTimeout(0, message2);
+//  
+//  Serial.print(F("Packet sent, state "));
+//  Serial.println(e, DEC);
+//
+//  if (e == 0) {
+//      digitalWrite(LORA_LED, HIGH);
+//      delay(500);
+//      digitalWrite(LORA_LED, LOW);
+//  }
 
   delay(4000);  
 }
